@@ -48,5 +48,6 @@ let value: f32 = noise.sample2d(x, y);
 
 ## Changelog
 
-* `0.0.2` updated readme
-* `0.0.1` initial release
+* `0.2.1` fix perm_mod12 optimization
+* `0.2.0` updated readme
+* `0.1.0` initial release

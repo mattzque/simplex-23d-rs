@@ -32,19 +32,23 @@ const GRAD3: [[f32; 3]; 12] = [
     [0.0, -1.0, -1.0],
 ];
 
-fn generate_perm_mod12(seed: u64) -> [usize; 512] {
+// uses a seed value to generate a permutation table and the same table with values mod 12
+fn generate_perm_mod12(seed: u64) -> ([usize; 512], [usize; 512]) {
     use rand::{seq::SliceRandom, SeedableRng};
     // random number generator with seed:
     let mut rng: rand::rngs::StdRng = SeedableRng::seed_from_u64(seed);
     let mut seq: Vec<_> = (0usize..256).collect();
     seq.shuffle(&mut rng);
     let mut perm = [0; 512];
+    let mut perm_mod12 = [0; 512];
     // To remove the need for index wrapping, double the permutation table length
     // mod 12 to lookup the gradients of the simplex corners
     for i in 0..512 {
-        perm[i] = seq[i & 255] % 12;
+        let value = seq[i & 255];
+        perm[i] = value;
+        perm_mod12[i] = value % 12;
     }
-    perm
+    (perm, perm_mod12)
 }
 
 #[inline(always)]
@@ -69,6 +73,7 @@ fn dot3(x0: f32, y0: f32, z0: f32, x1: f32, y1: f32, z1: f32) -> f32 {
 /// Simplex noise generator instance that keeps a permutation table internally.
 pub struct Simplex {
     seed: u64,
+    perm: [usize; 512],
     perm_mod12: [usize; 512],
 }
 
@@ -77,9 +82,11 @@ impl Simplex {
     /// 
     /// Creates a pre-computed permutation table using the seed value.
     pub fn new(seed: u64) -> Self {
+        let (perm, perm_mod12) = generate_perm_mod12(seed);
         Self {
             seed,
-            perm_mod12: generate_perm_mod12(seed),
+            perm,
+            perm_mod12
         }
     }
 
@@ -118,9 +125,9 @@ impl Simplex {
         // Work out the hashed gradient indices of the three simplex corners
         let ii: usize = (i & 255) as usize;
         let jj: usize = (j & 255) as usize;
-        let gi0 = self.perm_mod12[ii + self.perm_mod12[jj]];
-        let gi1 = self.perm_mod12[ii + i1 + self.perm_mod12[jj + j1]];
-        let gi2 = self.perm_mod12[ii + 1 + self.perm_mod12[jj + 1]];
+        let gi0 = self.perm_mod12[ii + self.perm[jj]];
+        let gi1 = self.perm_mod12[ii + i1 + self.perm[jj + j1]];
+        let gi2 = self.perm_mod12[ii + 1 + self.perm[jj + 1]];
 
         // Calculate the contribution from the three corners
         // double n0, n1, n2; // Noise contributions from the three corners
@@ -255,10 +262,10 @@ impl Simplex {
         let ii = (i & 255) as usize;
         let jj = (j & 255) as usize;
         let kk = (k & 255) as usize;
-        let gi0 = self.perm_mod12[ii + self.perm_mod12[jj + self.perm_mod12[kk]]];
-        let gi1 = self.perm_mod12[ii + i1 + self.perm_mod12[jj + j1 + self.perm_mod12[kk + k1]]];
-        let gi2 = self.perm_mod12[ii + i2 + self.perm_mod12[jj + j2 + self.perm_mod12[kk + k2]]];
-        let gi3 = self.perm_mod12[ii + 1 + self.perm_mod12[jj + 1 + self.perm_mod12[kk + 1]]];
+        let gi0 = self.perm_mod12[ii + self.perm[jj + self.perm[kk]]];
+        let gi1 = self.perm_mod12[ii + i1 + self.perm[jj + j1 + self.perm[kk + k1]]];
+        let gi2 = self.perm_mod12[ii + i2 + self.perm[jj + j2 + self.perm[kk + k2]]];
+        let gi3 = self.perm_mod12[ii + 1 + self.perm[jj + 1 + self.perm[kk + 1]]];
         // Calculate the contribution from the four corners
         // let n0, n1, n2, n3;
         // Noise contributions from the four corners
