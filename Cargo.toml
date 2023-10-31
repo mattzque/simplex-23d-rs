@@ -2,6 +2,10 @@
 name = "simplex-23d-rs"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+description = "Simplex 2d/3d noise in Rust"
+repository = "https://github.com/mattzque/simplex-23d-rs"
 
 [lib]
 name = "simplex_23d"
