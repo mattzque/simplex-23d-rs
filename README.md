@@ -1,5 +1,8 @@
 # Simplex 2D / 3D in Rust
 
+![License](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)
+[![Crates.io](https://img.shields.io/crates/v/simplex-23d-rs.svg)](https://crates.io/crates/simplex-23d-rs)
+
 Provides basic 2D and 3D simplex noise functions.
 
 * https://en.wikipedia.org/wiki/Simplex_noise
